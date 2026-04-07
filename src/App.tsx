@@ -1,10 +1,25 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home'
+import Players from './pages/Players'
+import Draw from './pages/Draw'
+import Bracket1v1 from './pages/Bracket1v1'
+import League2v2 from './pages/League2v2'
+import Profile from './pages/Profile'
+import Admin from './pages/Admin'
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold" style={{ color: 'var(--color-gold)' }}>
-        FifaCup San Tanã ⚽
-      </h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/players" element={<Players />} />
+        <Route path="/draw" element={<Draw />} />
+        <Route path="/1v1" element={<Bracket1v1 />} />
+        <Route path="/2v2" element={<League2v2 />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

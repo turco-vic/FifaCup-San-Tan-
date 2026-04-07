@@ -275,9 +275,9 @@ Admin cria jogador
 ### Fase 1 — Setup e Base
 - [x] Criar projeto com Vite + React + TypeScript
 - [x] Configurar Tailwind CSS
-- [ ] Criar projeto no Supabase e rodar o schema SQL
-- [ ] Configurar variáveis de ambiente
-- [ ] Configurar Supabase Auth e trigger de criação de perfil
+- [x] Criar projeto no Supabase e rodar o schema SQL
+- [x] Configurar variáveis de ambiente
+- [x] Configurar Supabase Auth e trigger de criação de perfil
 
 ### Fase 2 — Admin e Jogadores
 - [ ] Página de login do admin

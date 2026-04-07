@@ -319,7 +319,7 @@ Admin cria jogador
 
 ### Fase 6 — Polimento e Deploy
 
-- [ ] Página Home com próximas partidas e resultados recentes
+- [x] Página Home com próximas partidas e resultados recentes
 - [ ] Responsividade mobile
 - [ ] Configurar projeto na Vercel
 - [ ] Variáveis de ambiente na Vercel

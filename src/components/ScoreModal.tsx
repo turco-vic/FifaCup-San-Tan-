@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Match } from '../types'
+import { X } from 'lucide-react'
 
 type Props = {
     match: Match
@@ -41,14 +42,25 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-sm rounded-2xl p-6 border border-white/10"
-                style={{ backgroundColor: 'var(--color-green)' }}>
+            <div
+                className="w-full max-w-sm rounded-2xl p-6 border border-white/10"
+                style={{ backgroundColor: 'var(--color-green)' }}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-white font-bold text-lg">Lançar Resultado</h2>
+                    <button
+                        onClick={onClose}
+                        className="text-white/40 hover:text-white transition"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
 
-                <h2 className="text-white font-bold text-lg mb-6 text-center">Lançar Resultado</h2>
-
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="flex-1 text-center">
-                        <p className="text-white/60 text-xs mb-1 truncate">{homeName}</p>
+                {/* Times */}
+                <div className="flex flex-col gap-3 mb-6">
+                    <div>
+                        <p className="text-white/50 text-xs mb-1 truncate">{homeName}</p>
                         <input
                             type="number"
                             min="0"
@@ -57,14 +69,17 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
                             className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
                         />
                     </div>
-                    <span className="text-white/40 font-bold text-xl">×</span>
-                    <div className="flex-1 text-center">
-                        <p className="text-white/60 text-xs mb-1 truncate">{awayName}</p>
+
+                    <div className="text-center text-white/20 text-sm font-bold">×</div>
+
+                    <div>
+                        <p className="text-white/50 text-xs mb-1 truncate">{awayName}</p>
                         <input
                             type="number"
                             min="0"
                             value={awayScore}
                             onChange={e => setAwayScore(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSave()}
                             className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
                         />
                     </div>

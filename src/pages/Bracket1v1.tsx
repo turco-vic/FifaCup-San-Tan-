@@ -5,6 +5,7 @@ import { useMatches } from '../hooks/useMatches'
 import { useStandings } from '../hooks/useStandings'
 import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
+import KnockoutBracket from '../components/KnockoutBracket'
 import type { Profile, Match } from '../types'
 import { Pencil, Plus } from 'lucide-react'
 
@@ -64,7 +65,6 @@ function GroupSection({
                             <span className="flex-1 text-right text-sm text-white truncate">
                                 {getPlayerName(match.home_id)}
                             </span>
-
                             <div className="flex items-center gap-1 flex-shrink-0">
                                 {match.played ? (
                                     <span className="font-bold text-white px-2">
@@ -74,11 +74,9 @@ function GroupSection({
                                     <span className="text-white/30 px-2 text-sm">vs</span>
                                 )}
                             </div>
-
                             <span className="flex-1 text-left text-sm text-white truncate">
                                 {getPlayerName(match.away_id)}
                             </span>
-
                             {isAdmin && (
                                 <button
                                     onClick={() => onSelectMatch(match)}
@@ -99,8 +97,10 @@ export default function Bracket1v1() {
     const { profile } = useAuth()
     const { matches, loading: matchesLoading } = useMatches('1v1')
     const [groups, setGroups] = useState<GroupData[]>([])
+    const [players, setPlayers] = useState<Profile[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+    const [tab, setTab] = useState<'grupos' | 'matamata'>('grupos')
 
     useEffect(() => {
         async function fetchGroups() {
@@ -126,6 +126,7 @@ export default function Bracket1v1() {
                     .map(m => m.profile as unknown as Profile),
             }))
 
+            setPlayers(grouped.flatMap(g => g.players))
             setGroups(grouped)
             setLoading(false)
         }
@@ -134,11 +135,8 @@ export default function Bracket1v1() {
     }, [])
 
     function getPlayerName(id: string) {
-        for (const g of groups) {
-            const p = g.players.find(p => p.id === id)
-            if (p) return p.username ?? p.name ?? 'Sem nome'
-        }
-        return 'Desconhecido'
+        const p = players.find(p => p.id === id)
+        return p?.username ?? p?.name ?? 'Desconhecido'
     }
 
     if (loading || matchesLoading) {
@@ -158,26 +156,54 @@ export default function Bracket1v1() {
     }
 
     const isAdmin = profile?.role === 'admin'
+    const knockoutMatches = matches.filter(m => m.stage !== 'groups')
 
     return (
         <div className="min-h-screen p-6">
             <div className="max-w-2xl mx-auto">
 
                 <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-gold)' }}>
-                    1v1 — Fase de Grupos
+                    1v1
                 </h1>
 
-                <div className="flex flex-col gap-6">
-                    {groups.map(group => (
-                        <GroupSection
-                            key={group.id}
-                            group={group}
-                            matches={matches}
-                            isAdmin={isAdmin}
-                            onSelectMatch={setSelectedMatch}
-                        />
+                <div className="flex gap-2 mb-6">
+                    {(['grupos', 'matamata'] as const).map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setTab(t)}
+                            className="px-5 py-2 rounded-lg font-bold text-sm transition"
+                            style={tab === t
+                                ? { backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }
+                                : { backgroundColor: 'rgba(255,255,255,0.1)', color: 'white' }
+                            }
+                        >
+                            {t === 'grupos' ? 'Fase de Grupos' : 'Mata-mata'}
+                        </button>
                     ))}
                 </div>
+
+                {tab === 'grupos' && (
+                    <div className="flex flex-col gap-6">
+                        {groups.map(group => (
+                            <GroupSection
+                                key={group.id}
+                                group={group}
+                                matches={matches}
+                                isAdmin={isAdmin}
+                                onSelectMatch={setSelectedMatch}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {tab === 'matamata' && (
+                    <KnockoutBracket
+                        matches={knockoutMatches}
+                        players={players}
+                        isAdmin={isAdmin}
+                        onSelectMatch={setSelectedMatch}
+                    />
+                )}
 
             </div>
 

@@ -6,7 +6,8 @@ import { useStandings } from '../hooks/useStandings'
 import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
 import type { Profile, Duo, Match } from '../types'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trophy } from 'lucide-react'
+import { generate2v2Final } from '../lib/draw'
 
 type DuoWithPlayers = Duo & {
   player1: Profile
@@ -19,6 +20,8 @@ export default function League2v2() {
   const [duos, setDuos] = useState<DuoWithPlayers[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+  const [generatingFinal, setGeneratingFinal] = useState(false)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     async function fetchDuos() {
@@ -59,7 +62,29 @@ export default function League2v2() {
     created_at: d.created_at,
   }))
 
-  const standings = useStandings(duosAsProfiles, matches)
+  const leagueMatches = matches.filter(m => m.stage === 'league')
+  const finalMatch = matches.find(m => m.stage === 'final')
+  const standings = useStandings(duosAsProfiles, leagueMatches)
+
+  const allLeaguePlayed = leagueMatches.length > 0 && leagueMatches.every(m => m.played)
+
+  async function handleGenerateFinal() {
+    if (standings.length < 2) return
+    setGeneratingFinal(true)
+    setMessage('')
+
+    // Remove final anterior se existir
+    await supabase.from('matches').delete().eq('mode', '2v2').eq('stage', 'final')
+
+    const finalData = generate2v2Final(standings[0].id, standings[1].id)
+    await supabase.from('matches').insert({
+      ...finalData,
+      mode: '2v2',
+    })
+
+    setMessage('Final gerada com sucesso!')
+    setGeneratingFinal(false)
+  }
 
   if (loading || matchesLoading) {
     return (
@@ -87,6 +112,7 @@ export default function League2v2() {
           2v2 — Pontos Corridos
         </h1>
 
+        {/* Tabela de classificação */}
         <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
           <div className="px-4 py-3 border-b border-white/10"
             style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}>
@@ -99,7 +125,8 @@ export default function League2v2() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+        {/* Partidas da liga */}
+        <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
           <div className="px-4 py-3 border-b border-white/10"
             style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}>
             <h2 className="font-bold" style={{ color: 'var(--color-gold)' }}>
@@ -108,7 +135,7 @@ export default function League2v2() {
           </div>
 
           <div className="px-4 py-3 flex flex-col gap-2">
-            {matches.map(match => (
+            {leagueMatches.map(match => (
               <div
                 key={match.id}
                 className="flex items-center gap-2 py-2 border-b border-white/5 last:border-0"
@@ -116,7 +143,6 @@ export default function League2v2() {
                 <span className="flex-1 text-right text-sm text-white truncate">
                   {getDuoNameById(match.home_id)}
                 </span>
-
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {match.played ? (
                     <span className="font-bold text-white px-2">
@@ -126,11 +152,9 @@ export default function League2v2() {
                     <span className="text-white/30 px-2 text-sm">vs</span>
                   )}
                 </div>
-
                 <span className="flex-1 text-left text-sm text-white truncate">
                   {getDuoNameById(match.away_id)}
                 </span>
-
                 {isAdmin && (
                   <button
                     onClick={() => setSelectedMatch(match)}
@@ -143,6 +167,77 @@ export default function League2v2() {
             ))}
           </div>
         </div>
+
+        {/* Gerar final */}
+        {isAdmin && allLeaguePlayed && !finalMatch && (
+          <div className="mb-6">
+            <button
+              onClick={handleGenerateFinal}
+              disabled={generatingFinal}
+              className="w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
+              style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
+            >
+              <Trophy size={16} />
+              {generatingFinal ? 'Gerando...' : 'Gerar Final'}
+            </button>
+            {message && <p className="text-green-400 text-sm text-center mt-2">{message}</p>}
+          </div>
+        )}
+
+        {/* Final */}
+        {finalMatch && (
+          <div className="rounded-xl bg-white/5 border overflow-hidden"
+            style={{ borderColor: 'var(--color-gold)' }}>
+            <div className="px-4 py-3 border-b flex items-center gap-2"
+              style={{ backgroundColor: 'rgba(201,153,42,0.15)', borderColor: 'var(--color-gold)' }}>
+              <Trophy size={16} style={{ color: 'var(--color-gold)' }} />
+              <h2 className="font-bold" style={{ color: 'var(--color-gold)' }}>
+                Final
+              </h2>
+            </div>
+
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2">
+                <span className="flex-1 text-right text-sm text-white font-bold truncate">
+                  {getDuoNameById(finalMatch.home_id)}
+                </span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {finalMatch.played ? (
+                    <span className="font-bold text-white px-3 text-lg">
+                      {finalMatch.home_score} × {finalMatch.away_score}
+                    </span>
+                  ) : (
+                    <span className="text-white/30 px-3">vs</span>
+                  )}
+                </div>
+                <span className="flex-1 text-left text-sm text-white font-bold truncate">
+                  {getDuoNameById(finalMatch.away_id)}
+                </span>
+                {isAdmin && (
+                  <button
+                    onClick={() => setSelectedMatch(finalMatch)}
+                    className="p-1.5 rounded border border-white/20 text-white/50 hover:text-white transition flex-shrink-0"
+                  >
+                    {finalMatch.played ? <Pencil size={12} /> : <Plus size={12} />}
+                  </button>
+                )}
+              </div>
+
+              {/* Campeão */}
+              {finalMatch.played && finalMatch.home_score !== null && finalMatch.away_score !== null && (
+                <div className="mt-4 text-center">
+                  <p className="text-white/40 text-xs mb-1">🏆 Campeão</p>
+                  <p className="font-bold text-lg" style={{ color: 'var(--color-gold)' }}>
+                    {finalMatch.home_score > finalMatch.away_score
+                      ? getDuoNameById(finalMatch.home_id)
+                      : getDuoNameById(finalMatch.away_id)
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
 

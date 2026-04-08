@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/NavBar'
+import BottomNav from './components/BottomNav'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -17,7 +18,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Pública */}
+        {/* Públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -25,6 +26,7 @@ function App() {
         <Route path="/*" element={
           <ProtectedRoute>
             <Navbar />
+            <BottomNav />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/players" element={<Players />} />
@@ -32,7 +34,6 @@ function App() {
               <Route path="/2v2" element={<League2v2 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/player/:id" element={<PlayerProfile />} />
-              <Route path="*" element={<NotFound />} />
               <Route path="/draw" element={
                 <ProtectedRoute adminOnly>
                   <Draw />
@@ -43,6 +44,7 @@ function App() {
                   <Admin />
                 </ProtectedRoute>
               } />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </ProtectedRoute>
         } />

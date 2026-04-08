@@ -14,6 +14,7 @@ import PlayerProfile from './pages/PlayerProfile'
 import NotFound from './pages/NotFound'
 import ResetPassword from './pages/ResetPassword'
 import TopScorers from './pages/TopScorers'
+import Stats from './pages/Stats'
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
+              <Route path="/stats" element={<Stats />} />
             </Routes>
           </ProtectedRoute>
         } />

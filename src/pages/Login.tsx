@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
@@ -11,9 +12,20 @@ export default function Login() {
     const [error, setError] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [resetEmail, setResetEmail] = useState('')
+    const [resetSent, setResetSent] = useState(false)
+    const [showReset, setShowReset] = useState(false)
 
     if (!loading && profile) {
         navigate('/', { replace: true })
+    }
+
+    async function handleResetPassword() {
+        if (!resetEmail) return
+        await supabase.auth.resetPasswordForEmail(resetEmail, {
+            redirectTo: 'https://fifacup-santana.vercel.app/reset-password',
+        })
+        setResetSent(true)
     }
 
     async function handleLogin() {
@@ -33,9 +45,9 @@ export default function Login() {
             <div className="w-full max-w-sm">
 
                 <div className="flex flex-col items-center mb-10">
-                    <img src="/logo.png" alt="Logo" className="w-200 h-100 mb-4" />
+                    <img src="/logo.png" alt="Logo" className="w-24 h-24 object-contain mb-4" />
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--color-gold)' }}>
-                        FIFACup Santana
+                        FifaCup Santana
                     </h1>
                     <p className="text-white/40 text-sm mt-1">Faça login para continuar</p>
                 </div>
@@ -77,6 +89,37 @@ export default function Login() {
                     >
                         {submitting ? 'Entrando...' : 'Entrar'}
                     </button>
+
+                    {!showReset ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowReset(true)}
+                            className="text-white/40 hover:text-white text-xs text-center transition"
+                        >
+                            Esqueci minha senha
+                        </button>
+                    ) : (
+                        <div className="flex flex-col gap-3 border-t border-white/10 pt-4">
+                            <p className="text-white/60 text-xs">Digite seu email para redefinir a senha:</p>
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={resetEmail}
+                                onChange={e => setResetEmail(e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:border-yellow-500"
+                            />
+                            {resetSent ? (
+                                <p className="text-green-400 text-sm text-center">Email enviado! Verifique sua caixa de entrada.</p>
+                            ) : (
+                                <button
+                                    onClick={handleResetPassword}
+                                    className="w-full py-3 rounded-lg font-bold text-white border border-white/30 hover:bg-white/10 transition"
+                                >
+                                    Enviar link de redefinição
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
             </div>

@@ -119,7 +119,7 @@ export default function Admin() {
                         <h1 className="text-2xl font-bold" style={{ color: 'var(--color-gold)' }}>
                             Painel Admin
                         </h1>
-                        <p className="text-white/40 text-sm mt-0.5">FifaCup Santana</p>
+                        <p className="text-white/40 text-sm mt-0.5">FIFACup Santana</p>
                     </div>
                     <button
                         onClick={handleSignOut}

@@ -20,7 +20,7 @@ export default function Navbar() {
       style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
     >
       <Link to="/" className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>
-        FifaCup <span className="text-white">Santana</span>
+        FIFACup <span className="text-white">Santana</span>
       </Link>
 
       <div className="flex items-center gap-1">
@@ -28,11 +28,10 @@ export default function Navbar() {
           <Link
             key={path}
             to={path}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              location.pathname === path
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${location.pathname === path
                 ? ''
                 : 'text-white/50 hover:text-white hover:bg-white/10'
-            }`}
+              }`}
             style={
               location.pathname === path
                 ? { backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }
@@ -47,11 +46,10 @@ export default function Navbar() {
         {profile && (
           <Link
             to={profile.role === 'admin' ? '/admin' : '/profile'}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              ['/admin', '/profile'].includes(location.pathname)
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${['/admin', '/profile'].includes(location.pathname)
                 ? ''
                 : 'text-white/50 hover:text-white hover:bg-white/10'
-            }`}
+              }`}
             style={
               ['/admin', '/profile'].includes(location.pathname)
                 ? { backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }

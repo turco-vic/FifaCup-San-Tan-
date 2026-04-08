@@ -92,7 +92,7 @@ export default function Home() {
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-10">
           <h1 className="text-4xl font-bold mb-1" style={{ color: 'var(--color-gold)' }}>
-            FifaCup
+            FIFACup
           </h1>
           <h2 className="text-2xl font-bold text-white mb-2">Santana</h2>
           {profile && (

@@ -10,6 +10,7 @@ import League2v2 from './pages/League2v2'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import PlayerProfile from './pages/PlayerProfile'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/2v2" element={<League2v2 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/player/:id" element={<PlayerProfile />} />
+              <Route path="*" element={<NotFound />} />
               <Route path="/draw" element={
                 <ProtectedRoute adminOnly>
                   <Draw />

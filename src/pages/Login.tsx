@@ -35,7 +35,7 @@ export default function Login() {
                 <div className="flex flex-col items-center mb-10">
                     <img src="/favicon.svg" alt="Logo" className="w-20 h-20 mb-4" />
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--color-gold)' }}>
-                        FifaCup Santana
+                        FIFACup Santana
                     </h1>
                     <p className="text-white/40 text-sm mt-1">Faça login para continuar</p>
                 </div>

@@ -14,6 +14,11 @@ export default function Profile() {
     const [newPassword, setNewPassword] = useState('')
     const [savingPassword, setSavingPassword] = useState(false)
     const [passwordMessage, setPasswordMessage] = useState('')
+    const [duo, setDuo] = useState<{ id: string; duo_name: string | null; duo_team: string | null } | null>(null)
+    const [duoName, setDuoName] = useState('')
+    const [duoTeam, setDuoTeam] = useState('')
+    const [savingDuo, setSavingDuo] = useState(false)
+    const [duoMessage, setDuoMessage] = useState('')
 
     useEffect(() => {
         if (profile) {
@@ -22,6 +27,24 @@ export default function Profile() {
             setTeamName(profile.team_name ?? '')
             setAvatarUrl(profile.avatar_url)
         }
+    }, [profile])
+
+    useEffect(() => {
+        if (!profile) return
+        async function fetchDuo() {
+            const { data } = await supabase
+                .from('duos')
+                .select('id, duo_name, duo_team')
+                .or(`player1_id.eq.${profile!.id},player2_id.eq.${profile!.id}`)
+                .single()
+
+            if (data) {
+                setDuo(data)
+                setDuoName(data.duo_name ?? '')
+                setDuoTeam(data.duo_team ?? '')
+            }
+        }
+        fetchDuo()
     }, [profile])
 
     async function handleSaveProfile() {
@@ -34,6 +57,20 @@ export default function Profile() {
             .eq('id', profile.id)
         setMessage(error ? 'Erro ao salvar.' : 'Perfil salvo com sucesso!')
         setSaving(false)
+    }
+
+    async function handleSaveDuo() {
+        if (!duo) return
+        setSavingDuo(true)
+        setDuoMessage('')
+
+        const { error } = await supabase
+            .from('duos')
+            .update({ duo_name: duoName, duo_team: duoTeam })
+            .eq('id', duo.id)
+
+        setDuoMessage(error ? 'Erro ao salvar.' : 'Dupla salva com sucesso!')
+        setSavingDuo(false)
     }
 
     async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -167,6 +204,50 @@ export default function Profile() {
                         {saving ? 'Salvando...' : 'Salvar perfil'}
                     </button>
                 </div>
+
+                {/* Dupla 2v2 */}
+                {duo && (
+                    <div className="border-t border-white/10 pt-6 mb-6">
+                        <h2 className="text-white font-bold mb-4">Minha Dupla — 2v2</h2>
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-white/60 text-sm mb-1 block">Nome da dupla</label>
+                                <input
+                                    type="text"
+                                    value={duoName}
+                                    onChange={e => setDuoName(e.target.value)}
+                                    placeholder="Ex: Os Crias"
+                                    className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:border-yellow-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-white/60 text-sm mb-1 block">Time do FIFA (2v2)</label>
+                                <input
+                                    type="text"
+                                    value={duoTeam}
+                                    onChange={e => setDuoTeam(e.target.value)}
+                                    placeholder="Ex: Barcelona"
+                                    className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:border-yellow-500"
+                                />
+                            </div>
+
+                            {duoMessage && (
+                                <p className={`text-sm ${duoMessage.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>
+                                    {duoMessage}
+                                </p>
+                            )}
+
+                            <button
+                                onClick={handleSaveDuo}
+                                disabled={savingDuo}
+                                className="w-full py-3 rounded-lg font-bold text-white transition"
+                                style={{ backgroundColor: 'var(--color-gold)' }}
+                            >
+                                {savingDuo ? 'Salvando...' : 'Salvar dupla'}
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Trocar senha */}
                 <div className="border-t border-white/10 pt-6">

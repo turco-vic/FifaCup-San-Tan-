@@ -27,9 +27,9 @@ export type Duo = {
     player1_id: string
     player2_id: string
     team_name: string | null
+    duo_name: string | null
+    duo_team: string | null
     created_at: string
-    player1?: Profile
-    player2?: Profile
 }
 
 export type MatchMode = '1v1' | '2v2'

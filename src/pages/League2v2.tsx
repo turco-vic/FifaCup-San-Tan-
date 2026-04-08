@@ -28,10 +28,10 @@ export default function League2v2() {
       const { data } = await supabase
         .from('duos')
         .select(`
-          id, team_name, created_at, player1_id, player2_id,
-          player1:player1_id(id, name, username, avatar_url, team_name, role, created_at),
-          player2:player2_id(id, name, username, avatar_url, team_name, role, created_at)
-        `)
+    id, team_name, duo_name, duo_team, created_at, player1_id, player2_id,
+    player1:player1_id(id, name, username, avatar_url, team_name, role, created_at),
+    player2:player2_id(id, name, username, avatar_url, team_name, role, created_at)
+  `)
 
       setDuos((data as unknown as DuoWithPlayers[]) ?? [])
       setLoading(false)
@@ -41,6 +41,7 @@ export default function League2v2() {
   }, [])
 
   function getDuoName(duo: DuoWithPlayers) {
+    if (duo.duo_name) return duo.duo_name
     const p1 = duo.player1?.username ?? duo.player1?.name ?? '?'
     const p2 = duo.player2?.username ?? duo.player2?.name ?? '?'
     return `${p1} & ${p2}`

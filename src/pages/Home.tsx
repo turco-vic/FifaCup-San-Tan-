@@ -121,10 +121,10 @@ export default function Home() {
             to="/1v1"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
           >
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
+            <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
               <Swords size={20} style={{ color: 'var(--color-gold)' }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-white font-bold text-sm">1v1</p>
               <p className="text-white/40 text-xs">Fase de grupos</p>
             </div>
@@ -134,10 +134,10 @@ export default function Home() {
             to="/2v2"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
           >
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
+            <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
               <Handshake size={20} style={{ color: 'var(--color-gold)' }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-white font-bold text-sm">2v2</p>
               <p className="text-white/40 text-xs">Pontos corridos</p>
             </div>
@@ -147,11 +147,11 @@ export default function Home() {
             to="/players"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
           >
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
+            <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
               <Trophy size={20} style={{ color: 'var(--color-gold)' }} />
             </div>
-            <div>
-              <p className="text-white font-bold text-sm">Participantes</p>
+            <div className="min-w-0">
+              <p className="text-white font-bold text-sm truncate">Participantes</p>
               <p className="text-white/40 text-xs">{players.length} jogadores</p>
             </div>
           </Link>
@@ -160,12 +160,12 @@ export default function Home() {
             to="/profile"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
           >
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
+            <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(201,153,42,0.2)' }}>
               <User size={20} style={{ color: 'var(--color-gold)' }} />
             </div>
-            <div>
-              <p className="text-white font-bold text-sm">Meu perfil</p>
-              <p className="text-white/40 text-xs">Editar informações</p>
+            <div className="min-w-0">
+              <p className="text-white font-bold text-sm truncate">Meu perfil</p>
+              <p className="text-white/40 text-xs truncate">Editar informações</p>
             </div>
           </Link>
         </div>

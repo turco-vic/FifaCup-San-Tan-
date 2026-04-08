@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import type { Match, Profile } from '../types'
-import { Swords, Handshake, Trophy, User } from 'lucide-react'
+import { Swords, Handshake, Trophy, User, Download } from 'lucide-react'
+import { usePWA } from '../hooks/usePWA'
 
 type MatchWithNames = Match & {
   home_name: string
@@ -28,6 +29,7 @@ export default function Home() {
   const [upcomingMatches, setUpcomingMatches] = useState<MatchWithNames[]>([])
   const [players, setPlayers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
+  const { installPrompt, isInstalled, install } = usePWA()
 
   useEffect(() => {
     async function fetchData() {
@@ -90,9 +92,9 @@ export default function Home() {
       <div className="max-w-2xl mx-auto">
 
         {/* Header */}
-        <div className="flex flex-col items-center text-center mb-10">
+        <div className="flex flex-col items-center text-center mb-8">
           <h1 className="text-4xl font-bold mb-1" style={{ color: 'var(--color-gold)' }}>
-            FIFACup
+            FifaCup
           </h1>
           <h2 className="text-2xl font-bold text-white mb-2">Santana</h2>
           {profile && (
@@ -101,6 +103,17 @@ export default function Home() {
             </p>
           )}
         </div>
+
+        {/* Botão instalar PWA */}
+        {installPrompt && !isInstalled && (
+          <button
+            onClick={install}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/20 text-white hover:bg-white/10 transition mb-6 text-sm font-medium"
+          >
+            <Download size={16} style={{ color: 'var(--color-gold)' }} />
+            Instalar app no celular
+          </button>
+        )}
 
         {/* Atalhos */}
         <div className="grid grid-cols-2 gap-3 mb-8">

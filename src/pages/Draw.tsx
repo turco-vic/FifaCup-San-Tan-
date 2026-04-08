@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { drawGroups, drawDuos, generateGroupMatches, generateLeagueMatches } from '../lib/draw'
 import type { Profile, Duo } from '../types'
 import { Shuffle, Check, Plus, X, Hand } from 'lucide-react'
+import { Skeleton } from '../components/Skeleton'
 
 const GROUP_NAMES = ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D']
 
@@ -150,8 +151,29 @@ export default function Draw() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-white">Carregando...</p>
+      <div className="min-h-screen p-6">
+        <div className="max-w-2xl mx-auto">
+          <Skeleton className="h-8 w-24 mb-6" />
+          <div className="flex gap-2 mb-6">
+            <Skeleton className="h-9 w-16" />
+            <Skeleton className="h-9 w-16" />
+          </div>
+          <div className="flex flex-col gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <Skeleton className="h-5 w-20 mb-3" />
+                <div className="flex flex-col gap-2">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="flex items-center gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                      <Skeleton className="h-4 flex-1" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

@@ -8,6 +8,7 @@ import ScoreModal from '../components/ScoreModal'
 import type { Profile, Duo, Match } from '../types'
 import { Pencil, Plus, Trophy } from 'lucide-react'
 import { generate2v2Final } from '../lib/draw'
+import { Skeleton, SkeletonTable, SkeletonMatch } from '../components/Skeleton'
 
 type DuoWithPlayers = Duo & {
   player1: Profile
@@ -89,8 +90,26 @@ export default function League2v2() {
 
   if (loading || matchesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-white">Carregando...</p>
+      <div className="min-h-screen p-6">
+        <div className="max-w-2xl mx-auto">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-3 border-b border-white/10">
+              <Skeleton className="h-5 w-28" />
+            </div>
+            <div className="px-2 py-2">
+              <SkeletonTable />
+            </div>
+          </div>
+          <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/10">
+              <Skeleton className="h-5 w-20" />
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-2">
+              {[...Array(6)].map((_, i) => <SkeletonMatch key={i} />)}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

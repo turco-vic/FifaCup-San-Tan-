@@ -8,6 +8,7 @@ import ScoreModal from '../components/ScoreModal'
 import KnockoutBracket from '../components/KnockoutBracket'
 import type { Profile, Match } from '../types'
 import { Pencil, Plus, Trophy } from 'lucide-react'
+import { Skeleton, SkeletonTable, SkeletonMatch } from '../components/Skeleton'
 
 type GroupData = {
     id: string
@@ -216,8 +217,32 @@ export default function Bracket1v1() {
 
     if (loading || matchesLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-2xl mx-auto">
+                    <Skeleton className="h-8 w-16 mb-6" />
+                    <div className="flex gap-2 mb-6">
+                        <Skeleton className="h-9 w-32" />
+                        <Skeleton className="h-9 w-32" />
+                    </div>
+                    <div className="flex flex-col gap-6">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                                <div className="px-4 py-3 border-b border-white/10">
+                                    <Skeleton className="h-5 w-24" />
+                                </div>
+                                <div className="px-2 py-2">
+                                    <SkeletonTable />
+                                </div>
+                                <div className="border-t border-white/10 px-4 py-3">
+                                    <Skeleton className="h-3 w-16 mb-3" />
+                                    <div className="flex flex-col gap-2">
+                                        {[...Array(3)].map((_, j) => <SkeletonMatch key={j} />)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         )
     }

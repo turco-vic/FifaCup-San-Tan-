@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { Skeleton } from '../components/Skeleton'
 
 export default function Profile() {
     const { profile, loading, signOut } = useAuth()
@@ -21,12 +22,11 @@ export default function Profile() {
     const [duoMessage, setDuoMessage] = useState('')
 
     useEffect(() => {
-        if (profile) {
-            setName(profile.name ?? '')
-            setUsername(profile.username ?? '')
-            setTeamName(profile.team_name ?? '')
-            setAvatarUrl(profile.avatar_url)
-        }
+        if (!profile) return
+        setName(profile.name ?? '')
+        setUsername(profile.username ?? '')
+        setTeamName(profile.team_name ?? '')
+        setAvatarUrl(profile.avatar_url)
     }, [profile])
 
     useEffect(() => {
@@ -110,8 +110,28 @@ export default function Profile() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-md mx-auto">
+                    <div className="flex items-center justify-between mb-8">
+                        <Skeleton className="h-8 w-32" />
+                        <Skeleton className="h-9 w-16" />
+                    </div>
+                    <div className="flex flex-col items-center mb-8">
+                        <Skeleton className="w-24 h-24 rounded-full mb-3" />
+                        <Skeleton className="h-5 w-32 mb-2" />
+                        <Skeleton className="h-4 w-20 mb-3" />
+                        <Skeleton className="h-9 w-28" />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i}>
+                                <Skeleton className="h-3 w-24 mb-1" />
+                                <Skeleton className="h-12 w-full rounded-lg" />
+                            </div>
+                        ))}
+                        <Skeleton className="h-12 w-full rounded-lg" />
+                    </div>
+                </div>
             </div>
         )
     }

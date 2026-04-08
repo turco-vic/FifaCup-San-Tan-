@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
 import { ArrowLeft } from 'lucide-react'
+import { Skeleton } from '../components/Skeleton'
 
 export default function PlayerProfile() {
     const { id } = useParams()
@@ -27,8 +28,16 @@ export default function PlayerProfile() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-sm mx-auto">
+                    <Skeleton className="h-9 w-20 mb-6" />
+                    <div className="flex flex-col items-center">
+                        <Skeleton className="w-28 h-28 rounded-full mb-4" />
+                        <Skeleton className="h-6 w-40 mb-2" />
+                        <Skeleton className="h-4 w-24 mb-4" />
+                        <Skeleton className="h-9 w-32 rounded-full" />
+                    </div>
+                </div>
             </div>
         )
     }

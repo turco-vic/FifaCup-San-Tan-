@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
 import { Trophy } from 'lucide-react'
+import { Skeleton, SkeletonCard } from '../components/Skeleton'
 
 type PlayerGoals = Profile & { total_goals: number }
 
@@ -45,8 +46,13 @@ export default function TopScorers() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-2xl mx-auto">
+                    <Skeleton className="h-8 w-40 mb-6" />
+                    <div className="flex flex-col gap-2">
+                        {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+                    </div>
+                </div>
             </div>
         )
     }

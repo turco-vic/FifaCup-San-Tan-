@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Match, Profile } from '../types'
 import { Trophy, Swords, Shield, Zap } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { Skeleton } from '../components/Skeleton'
 
 type MatchWithPlayers = Match & {
     home_player: Profile | null
@@ -60,8 +61,33 @@ export default function Stats() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-2xl mx-auto">
+                    <Skeleton className="h-8 w-48 mb-6" />
+                    <div className="flex flex-col gap-4 mb-8">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                <Skeleton className="h-3 w-32 mb-2" />
+                                <Skeleton className="h-5 w-64" />
+                            </div>
+                        ))}
+                        <div className="grid grid-cols-2 gap-4">
+                            {[...Array(2)].map((_, i) => (
+                                <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <Skeleton className="h-3 w-24 mb-2" />
+                                    <Skeleton className="h-5 w-32 mb-1" />
+                                    <Skeleton className="h-3 w-16" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">
+                            <Skeleton className="h-3 w-40 mb-4" />
+                            <Skeleton className="h-48 w-full rounded-lg" />
+                        </div>
+                    ))}
+                </div>
             </div>
         )
     }

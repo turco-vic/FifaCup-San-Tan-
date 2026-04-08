@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../contexts/ToastContext'
 import type { Profile, Match } from '../types'
 import { Users, Trophy, Shuffle, LogOut, ChevronRight, Clock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Skeleton, SkeletonCard } from '../components/Skeleton'
 
 type DuoWithPlayers = {
     id: string
@@ -24,33 +25,33 @@ export default function Admin() {
     const [showConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        async function fetchData() {
+            const { data: playersData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('role', 'player')
+                .order('name')
 
-    async function fetchData() {
-        const { data: playersData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', 'player')
-            .order('name')
+            const { data: matchesData } = await supabase
+                .from('matches')
+                .select('*')
 
-        const { data: matchesData } = await supabase
-            .from('matches')
-            .select('*')
-
-        const { data: duosData } = await supabase
-            .from('duos')
-            .select(`
+            const { data: duosData } = await supabase
+                .from('duos')
+                .select(`
         id,
         player1:player1_id(id, name, username, avatar_url, team_name, role, created_at),
         player2:player2_id(id, name, username, avatar_url, team_name, role, created_at)
       `)
 
-        setPlayers(playersData ?? [])
-        setMatches(matchesData ?? [])
-        setDuos((duosData as unknown as DuoWithPlayers[]) ?? [])
-        setLoading(false)
-    }
+            setPlayers(playersData ?? [])
+            setMatches(matchesData ?? [])
+            setDuos((duosData as unknown as DuoWithPlayers[]) ?? [])
+            setLoading(false)
+        }
+
+        fetchData()
+    }, [])
 
     async function handleSignOut() {
         await signOut()
@@ -68,15 +69,37 @@ export default function Admin() {
         setShowConfirm(false)
         setResetting(false)
         showToast('Campeonato resetado com sucesso!')
-        await fetchData()
+        window.location.reload()
     }
 
     if (!profile || profile.role !== 'admin') return null
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-white">Carregando...</p>
+            <div className="min-h-screen p-6">
+                <div className="max-w-2xl mx-auto">
+                    <div className="flex items-center justify-between mb-8">
+                        <Skeleton className="h-8 w-40" />
+                        <Skeleton className="h-9 w-20" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                <Skeleton className="h-4 w-20 mb-2" />
+                                <Skeleton className="h-8 w-16 mb-1" />
+                                <Skeleton className="h-3 w-24" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
+                        <div className="px-4 py-3 border-b border-white/10">
+                            <Skeleton className="h-5 w-32" />
+                        </div>
+                        <div className="flex flex-col gap-3 p-4">
+                            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+                        </div>
+                    </div>
+                </div>
             </div>
         )
     }

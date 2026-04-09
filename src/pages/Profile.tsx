@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { Skeleton } from '../components/Skeleton'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 
 export default function Profile() {
     const { profile, loading, signOut } = useAuth()
@@ -20,6 +21,7 @@ export default function Profile() {
     const [duoTeam, setDuoTeam] = useState('')
     const [savingDuo, setSavingDuo] = useState(false)
     const [duoMessage, setDuoMessage] = useState('')
+    const { isSubscribed, isLoading: loadingPush, subscribe, unsubscribe } = usePushNotifications()
 
     useEffect(() => {
         if (!profile) return
@@ -63,12 +65,10 @@ export default function Profile() {
         if (!duo) return
         setSavingDuo(true)
         setDuoMessage('')
-
         const { error } = await supabase
             .from('duos')
             .update({ duo_name: duoName, duo_team: duoTeam })
             .eq('id', duo.id)
-
         setDuoMessage(error ? 'Erro ao salvar.' : 'Dupla salva com sucesso!')
         setSavingDuo(false)
     }
@@ -225,6 +225,25 @@ export default function Profile() {
                     </button>
                 </div>
 
+                {/* Notificações */}
+                <div className="border-t border-white/10 pt-6 mb-6">
+                    <h2 className="text-white font-bold mb-1">Notificações</h2>
+                    <p className="text-white/50 text-sm mb-4">
+                        Receba alertas de gols e resultados em tempo real.
+                    </p>
+                    <button
+                        onClick={isSubscribed ? unsubscribe : subscribe}
+                        disabled={loadingPush}
+                        className="w-full py-3 rounded-lg font-bold transition border"
+                        style={isSubscribed
+                            ? { borderColor: 'var(--color-gold)', color: 'var(--color-gold)', background: 'transparent' }
+                            : { backgroundColor: 'var(--color-gold)', color: 'white', border: 'none' }
+                        }
+                    >
+                        {loadingPush ? 'Aguarde...' : isSubscribed ? '🔔 Notificações ativadas — clique para desativar' : '🔕 Ativar notificações'}
+                    </button>
+                </div>
+
                 {/* Dupla 2v2 */}
                 {duo && (
                     <div className="border-t border-white/10 pt-6 mb-6">
@@ -250,13 +269,11 @@ export default function Profile() {
                                     className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:border-yellow-500"
                                 />
                             </div>
-
                             {duoMessage && (
                                 <p className={`text-sm ${duoMessage.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>
                                     {duoMessage}
                                 </p>
                             )}
-
                             <button
                                 onClick={handleSaveDuo}
                                 disabled={savingDuo}

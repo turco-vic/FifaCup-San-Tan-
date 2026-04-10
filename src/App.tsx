@@ -33,32 +33,34 @@ function App() {
           <ProtectedRoute>
             <Navbar />
             <BottomNav />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/players" element={<Players />} />
-              <Route path="/1v1" element={<Bracket1v1 />} />
-              <Route path="/2v2" element={<League2v2 />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/player/:id" element={<PlayerProfile />} />
-              <Route path="/top-scorers" element={<TopScorers />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/tournaments/new" element={<CreateTournament />} />
-              <Route path="/tournaments/join" element={<JoinTournament />} />
-              <Route path="/tournament/:id" element={<TournamentDashboard />} />
-              <Route path="/tournament/:id/manage" element={<TournamentManage />} />
+            <main className="pt-16">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/players" element={<Players />} />
+                <Route path="/1v1" element={<Bracket1v1 />} />
+                <Route path="/2v2" element={<League2v2 />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/player/:id" element={<PlayerProfile />} />
+                <Route path="/top-scorers" element={<TopScorers />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/tournaments/new" element={<CreateTournament />} />
+                <Route path="/tournaments/join" element={<JoinTournament />} />
+                <Route path="/tournament/:id" element={<TournamentDashboard />} />
+                <Route path="/tournament/:id/manage" element={<TournamentManage />} />
 
-              <Route path="/draw" element={
-                <ProtectedRoute supremeOnly>
-                  <Draw />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute supremeOnly>
-                  <Supreme />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="/draw" element={
+                  <ProtectedRoute supremeOnly>
+                    <Draw />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute supremeOnly>
+                    <Supreme />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
           </ProtectedRoute>
         } />
       </Routes>

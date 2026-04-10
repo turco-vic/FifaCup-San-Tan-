@@ -5,6 +5,7 @@ import { useMatches } from '../hooks/useMatches'
 import { useStandings } from '../hooks/useStandings'
 import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
+import Confetti from '../components/Confetti'
 import type { Profile, Duo, Match } from '../types'
 import { Pencil, Plus, Trophy } from 'lucide-react'
 import { generate2v2Final } from '../lib/draw'
@@ -25,6 +26,7 @@ export default function League2v2() {
   const [generatingFinal, setGeneratingFinal] = useState(false)
   const [message, setMessage] = useState('')
   const [selectedDuo, setSelectedDuo] = useState<DuoWithPlayers | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   useEffect(() => {
     async function fetchDuos() {
@@ -72,12 +74,27 @@ export default function League2v2() {
 
   const allLeaguePlayed = leagueMatches.length > 0 && leagueMatches.every(m => m.played)
 
+  // Detectar campeão e disparar confetes
+  const hasChampion =
+    !!finalMatch &&
+    finalMatch.played &&
+    finalMatch.home_score !== null &&
+    finalMatch.away_score !== null &&
+    finalMatch.home_score !== finalMatch.away_score
+
+  useEffect(() => {
+    if (hasChampion) {
+      setShowConfetti(true)
+      const t = setTimeout(() => setShowConfetti(false), 7000)
+      return () => clearTimeout(t)
+    }
+  }, [hasChampion])
+
   async function handleGenerateFinal() {
     if (standings.length < 2) return
     setGeneratingFinal(true)
     setMessage('')
 
-    // Remove final anterior se existir
     await supabase.from('matches').delete().eq('mode', '2v2').eq('stage', 'final')
 
     const finalData = generate2v2Final(standings[0].id, standings[1].id)
@@ -126,8 +143,16 @@ export default function League2v2() {
 
   const isAdmin = profile?.role === 'admin'
 
+  const championName = hasChampion
+    ? finalMatch!.home_score! > finalMatch!.away_score!
+      ? getDuoNameById(finalMatch!.home_id)
+      : getDuoNameById(finalMatch!.away_id)
+    : null
+
   return (
     <div className="min-h-screen p-6">
+      <Confetti active={showConfetti} duration={5000} />
+
       <div className="max-w-2xl mx-auto">
 
         <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-gold)' }}>
@@ -253,15 +278,18 @@ export default function League2v2() {
               </div>
 
               {/* Campeão */}
-              {finalMatch.played && finalMatch.home_score !== null && finalMatch.away_score !== null && (
+              {hasChampion && championName && (
                 <div className="mt-4 text-center">
                   <p className="text-white/40 text-xs mb-1">🏆 Campeão</p>
                   <p className="font-bold text-lg" style={{ color: 'var(--color-gold)' }}>
-                    {finalMatch.home_score > finalMatch.away_score
-                      ? getDuoNameById(finalMatch.home_id)
-                      : getDuoNameById(finalMatch.away_id)
-                    }
+                    {championName}
                   </p>
+                  <button
+                    onClick={() => setShowConfetti(true)}
+                    className="mt-2 text-xs px-3 py-1 rounded-full border border-white/20 text-white/40 hover:text-white hover:border-white/40 transition"
+                  >
+                    🎊 Celebrar
+                  </button>
                 </div>
               )}
             </div>

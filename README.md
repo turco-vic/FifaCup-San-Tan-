@@ -483,10 +483,10 @@ O projeto foi construído do zero em **3 dias**, do setup ao deploy completo.
 - [x] Toast system com contexto global
 - [x] Página 404 amigável
 - [x] Deploy na Vercel com CI/CD automático
+- [x] Confetes / celebração ao detectar campeão
  
 ### 🔜 Próximas Versões
  
-- [ ] 🎊 Confetes / celebração ao detectar campeão
 - [ ] 📺 Modo Apresentação (fullscreen para TV/projetor com fontes maiores)
 - [ ] 🌙 Tema claro/escuro (com persistência no perfil)
 - [ ] 🏅 Troféus no perfil público (🥇🥈🥉 + ícone de artilheiro)

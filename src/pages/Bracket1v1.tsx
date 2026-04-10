@@ -6,6 +6,7 @@ import { useStandings } from '../hooks/useStandings'
 import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
 import KnockoutBracket from '../components/KnockoutBracket'
+import Confetti from '../components/Confetti'
 import type { Profile, Match } from '../types'
 import { Pencil, Plus, Trophy } from 'lucide-react'
 import { Skeleton, SkeletonTable, SkeletonMatch } from '../components/Skeleton'
@@ -104,6 +105,7 @@ export default function Bracket1v1() {
     const [tab, setTab] = useState<'grupos' | 'matamata'>('grupos')
     const [generatingQuarters, setGeneratingQuarters] = useState(false)
     const [message, setMessage] = useState('')
+    const [showConfetti, setShowConfetti] = useState(false)
 
     useEffect(() => {
         async function fetchGroups() {
@@ -136,6 +138,23 @@ export default function Bracket1v1() {
 
         fetchGroups()
     }, [])
+
+    // Detectar campeão 1v1
+    const finalMatch = matches.find(m => m.stage === 'final' && m.mode === '1v1')
+    const hasChampion =
+        !!finalMatch &&
+        finalMatch.played &&
+        finalMatch.home_score !== null &&
+        finalMatch.away_score !== null &&
+        finalMatch.home_score !== finalMatch.away_score
+
+    useEffect(() => {
+        if (hasChampion) {
+            setShowConfetti(true)
+            const t = setTimeout(() => setShowConfetti(false), 7000)
+            return () => clearTimeout(t)
+        }
+    }, [hasChampion])
 
     function getGroupStandings(group: GroupData) {
         const groupMatches = matches.filter(
@@ -261,13 +280,43 @@ export default function Bracket1v1() {
     const quartersExist = matches.some(m => m.stage === 'quarters')
     const knockoutMatches = matches.filter(m => m.stage !== 'groups')
 
+    const championName = hasChampion
+        ? finalMatch!.home_score! > finalMatch!.away_score!
+            ? getPlayerName(finalMatch!.home_id)
+            : getPlayerName(finalMatch!.away_id)
+        : null
+
     return (
         <div className="min-h-screen p-6">
+            <Confetti active={showConfetti} duration={5000} />
+
             <div className="max-w-2xl mx-auto">
 
                 <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-gold)' }}>
                     1v1
                 </h1>
+
+                {/* Banner campeão */}
+                {hasChampion && championName && (
+                    <div
+                        className="mb-6 px-4 py-4 rounded-xl text-center border"
+                        style={{
+                            borderColor: 'var(--color-gold)',
+                            backgroundColor: 'rgba(201,153,42,0.1)',
+                        }}
+                    >
+                        <p className="text-white/50 text-xs mb-1">🏆 Campeão FifaCup 1v1</p>
+                        <p className="font-bold text-xl" style={{ color: 'var(--color-gold)' }}>
+                            {championName}
+                        </p>
+                        <button
+                            onClick={() => setShowConfetti(true)}
+                            className="mt-2 text-xs px-3 py-1 rounded-full border border-white/20 text-white/40 hover:text-white hover:border-white/40 transition"
+                        >
+                            🎊 Celebrar novamente
+                        </button>
+                    </div>
+                )}
 
                 <div className="flex gap-2 mb-6">
                     {(['grupos', 'matamata'] as const).map(t => (

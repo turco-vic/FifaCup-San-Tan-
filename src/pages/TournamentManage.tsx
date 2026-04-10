@@ -88,10 +88,6 @@ export default function TournamentManage() {
         return tp?.profile?.username ?? tp?.profile?.name ?? 'Desconhecido'
     }
 
-    function getUsedPlayerIds() {
-        return duos.flatMap(d => [d.p1, d.p2].filter(Boolean))
-    }
-
     function handleShuffleDuos() {
         const allPlayerIds = players.map(p => p.player_id)
         const shuffled = [...allPlayerIds].sort(() => Math.random() - 0.5)

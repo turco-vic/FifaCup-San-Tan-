@@ -106,93 +106,63 @@ function MatchCard({ match, homeLabel, awayLabel, players, isAdmin, onSelectMatc
     )
 }
 
+const STAGE_ORDER = [
+    { stage: 'round32', label: '16avos de Final' },
+    { stage: 'round16', label: 'Oitavas de Final' },
+    { stage: 'quarters', label: 'Quartas de Final' },
+    { stage: 'semis', label: 'Semifinais' },
+    { stage: 'final', label: 'Final' },
+]
+
 export default function KnockoutBracket({ matches, players, isAdmin, onSelectMatch }: Props) {
-    const quarters = matches
-        .filter(m => m.stage === 'quarters')
-        .sort((a, b) => (a.match_order ?? 0) - (b.match_order ?? 0))
-
-    const semis = matches
-        .filter(m => m.stage === 'semis')
-        .sort((a, b) => (a.match_order ?? 0) - (b.match_order ?? 0))
-
-    const final = matches.find(m => m.stage === 'final')
-
-    const quarterLabels = [
-        ['1º Grupo A', '2º Grupo B'],
-        ['1º Grupo C', '2º Grupo D'],
-        ['1º Grupo B', '2º Grupo A'],
-        ['1º Grupo D', '2º Grupo C'],
-    ]
+    const presentStages = STAGE_ORDER.filter(s => matches.some(m => m.stage === s.stage))
 
     return (
         <div className="flex flex-col items-center gap-8 w-full">
+            {presentStages.map(({ stage, label }, si) => {
+                const isFinal = stage === 'final'
+                const stageMatches = matches
+                    .filter(m => m.stage === stage)
+                    .sort((a, b) => (a.match_order ?? 0) - (b.match_order ?? 0))
 
-            {/* Quartas */}
-            <div className="w-full">
-                <p className="text-white/40 text-xs uppercase tracking-widest mb-4 text-center">
-                    Quartas de Final
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                    {quarterLabels.map(([homeLabel, awayLabel], i) => (
-                        <MatchCard
-                            key={i}
-                            match={quarters[i]}
-                            homeLabel={homeLabel}
-                            awayLabel={awayLabel}
-                            players={players}
-                            isAdmin={isAdmin}
-                            onSelectMatch={onSelectMatch}
-                        />
-                    ))}
-                </div>
-            </div>
+                const gridClass = isFinal
+                    ? 'max-w-xs mx-auto w-full'
+                    : stageMatches.length <= 2
+                    ? 'grid grid-cols-2 gap-3 max-w-lg mx-auto w-full'
+                    : 'grid grid-cols-2 gap-3 w-full'
 
-            {/* Divisor */}
-            <div className="w-full flex items-center gap-3">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/20 text-xs uppercase tracking-widest">Semifinais</span>
-                <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            {/* Semifinais */}
-            <div className="w-full max-w-lg">
-                <div className="grid grid-cols-2 gap-3">
-                    {[0, 1].map(i => (
-                        <MatchCard
-                            key={i}
-                            match={semis[i]}
-                            homeLabel={`Vencedor Q${i * 2 + 1}`}
-                            awayLabel={`Vencedor Q${i * 2 + 2}`}
-                            players={players}
-                            isAdmin={isAdmin}
-                            onSelectMatch={onSelectMatch}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* Divisor */}
-            <div className="w-full flex items-center gap-3">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/20 text-xs uppercase tracking-widest flex items-center gap-1">
-                    <Trophy size={12} style={{ color: 'var(--color-gold)' }} />
-                    Final
-                </span>
-                <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            {/* Final */}
-            <div className="w-full max-w-xs">
-                <MatchCard
-                    match={final}
-                    homeLabel="Vencedor Semi 1"
-                    awayLabel="Vencedor Semi 2"
-                    players={players}
-                    isAdmin={isAdmin}
-                    onSelectMatch={onSelectMatch}
-                />
-            </div>
-
+                return (
+                    <div key={stage} className="w-full">
+                        {si > 0 ? (
+                            <div className="w-full flex items-center gap-3 mb-6">
+                                <div className="flex-1 h-px bg-white/10" />
+                                <span className="text-white/20 text-xs uppercase tracking-widest flex items-center gap-1">
+                                    {isFinal && <Trophy size={12} style={{ color: 'var(--color-gold)' }} />}
+                                    {label}
+                                </span>
+                                <div className="flex-1 h-px bg-white/10" />
+                            </div>
+                        ) : (
+                            <p className="text-white/40 text-xs uppercase tracking-widest mb-4 text-center">
+                                {label}
+                            </p>
+                        )}
+                        <div className={gridClass}>
+                            {stageMatches.map((match, i) => (
+                                <MatchCard
+                                    key={match.id}
+                                    match={match}
+                                    homeLabel={`Classificado ${i * 2 + 1}`}
+                                    awayLabel={`Classificado ${i * 2 + 2}`}
+                                    players={players}
+                                    isAdmin={isAdmin}
+                                    onSelectMatch={onSelectMatch}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }

@@ -187,22 +187,57 @@ export default function TournamentDashboard() {
         )
     }
 
-    async function handleGenerateQuarters() {
+    async function handleGenerateFirstKORound() {
         if (!tournament || !id || groups.length === 0) return
         setGeneratingBracket(true)
         const groupStandings = groups.map(g => getGroupStandingsForBracket(g))
-        const pairs: [number, number][] = groups.length === 4
-            ? [[0, 1], [2, 3], [1, 0], [3, 2]]
-            : groups.map((_, i) => [i, (i + 1) % groups.length] as [number, number])
-        const quarterMatches = pairs.map(([gi, gi2], idx) => ({
-            tournament_id: id, mode: tournament.mode, stage: 'quarters' as const,
-            home_id: groupStandings[gi][0]?.id, away_id: groupStandings[gi2][1]?.id,
-            match_order: idx, played: false,
-        })).filter(m => m.home_id && m.away_id)
-        await supabase.from('matches').delete().eq('tournament_id', id).eq('stage', 'quarters')
-        await supabase.from('matches').delete().eq('tournament_id', id).eq('stage', 'semis')
-        await supabase.from('matches').delete().eq('tournament_id', id).eq('stage', 'final')
-        await supabase.from('matches').insert(quarterMatches)
+        const n = groups.length
+        // 4 groups → quarters, 8 groups → round16, 16 groups → round32
+        const firstStage = n <= 4 ? 'quarters' : n <= 8 ? 'round16' : 'round32'
+        const koMatches: any[] = []
+        for (let i = 0; i + 1 < n; i += 2) {
+            koMatches.push({
+                tournament_id: id, mode: tournament.mode, stage: firstStage,
+                home_id: groupStandings[i][0]?.id, away_id: groupStandings[i + 1]?.[1]?.id,
+                match_order: koMatches.length, played: false,
+            })
+            koMatches.push({
+                tournament_id: id, mode: tournament.mode, stage: firstStage,
+                home_id: groupStandings[i + 1]?.[0]?.id, away_id: groupStandings[i][1]?.id,
+                match_order: koMatches.length, played: false,
+            })
+        }
+        for (const s of ['round32', 'round16', 'quarters', 'semis', 'final']) {
+            await supabase.from('matches').delete().eq('tournament_id', id).eq('stage', s)
+        }
+        await supabase.from('matches').insert(koMatches.filter(m => m.home_id && m.away_id))
+        setGeneratingBracket(false)
+        fetchAll(id)
+    }
+
+    async function handleAdvanceRound(fromStage: string, toStage: string) {
+        if (!tournament || !id) return
+        setGeneratingBracket(true)
+        const prev = matches
+            .filter(m => m.stage === fromStage)
+            .sort((a, b) => (a.match_order ?? 0) - (b.match_order ?? 0))
+        const getWinner = (m: Match): string | null =>
+            m.played && m.home_score !== null && m.away_score !== null
+                ? m.home_score > m.away_score ? m.home_id : m.away_id
+                : null
+        const next: any[] = []
+        for (let i = 0; i + 1 < prev.length; i += 2) {
+            const wh = getWinner(prev[i]), wa = getWinner(prev[i + 1])
+            if (wh && wa) next.push({
+                tournament_id: id, mode: tournament.mode, stage: toStage,
+                home_id: wh, away_id: wa, played: false, match_order: i / 2,
+            })
+        }
+        const allLater = ['round16', 'quarters', 'semis', 'final']
+        for (const s of allLater.slice(allLater.indexOf(toStage))) {
+            await supabase.from('matches').delete().eq('tournament_id', id).eq('stage', s)
+        }
+        if (next.length > 0) await supabase.from('matches').insert(next)
         setGeneratingBracket(false)
         fetchAll(id)
     }
@@ -285,6 +320,15 @@ export default function TournamentDashboard() {
     const semisExist = matches.some(m => m.stage === 'semis')
     const allSemisPlayed = matches.filter(m => m.stage === 'semis').length > 0 &&
         matches.filter(m => m.stage === 'semis').every(m => m.played)
+
+    const round32Matches = matches.filter(m => m.stage === 'round32')
+    const round16Matches = matches.filter(m => m.stage === 'round16')
+    const round32Exist = round32Matches.length > 0
+    const round16Exist = round16Matches.length > 0
+    const allRound32Played = round32Exist && round32Matches.every(m => m.played)
+    const allRound16Played = round16Exist && round16Matches.every(m => m.played)
+    const firstKOLabel = groups.length <= 4 ? 'Quartas de Final' : groups.length <= 8 ? 'Oitavas de Final' : '16avos de Final'
+    const anyKOExists = round32Exist || round16Exist || quartersExist
 
     useEffect(() => {
         if (hasChampion) {
@@ -376,14 +420,14 @@ export default function TournamentDashboard() {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-6">
-                    {(['partidas', 'jogadores'] as Tab[]).map(t => (
+                    {(['partidas', 'jogadores', 'estatisticas'] as Tab[]).map(t => (
                         <button key={t} onClick={() => setTab(t)}
                             className="px-4 py-2 rounded-lg font-bold text-sm transition"
                             style={tab === t
                                 ? { backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }
                                 : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }
                             }>
-                            {t === 'partidas' ? 'Partidas' : `Jogadores (${players.length})`}
+                            {t === 'partidas' ? 'Partidas' : t === 'jogadores' ? `Jogadores (${players.length})` : 'Stats'}
                         </button>
                     ))}
                 </div>
@@ -485,9 +529,31 @@ export default function TournamentDashboard() {
                                 {/* Bracket visual — formato grupos + mata-mata */}
                                 {tournament.format === 'groups_knockout' && (
                                     <div className="flex flex-col gap-4">
-                                        {isAdmin && allGroupsPlayed && !quartersExist && (
+                                        {isAdmin && allGroupsPlayed && !anyKOExists && (
                                             <button
-                                                onClick={handleGenerateQuarters}
+                                                onClick={handleGenerateFirstKORound}
+                                                disabled={generatingBracket}
+                                                className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-40"
+                                                style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
+                                            >
+                                                <Trophy size={16} />
+                                                {generatingBracket ? 'Gerando...' : `Gerar ${firstKOLabel}`}
+                                            </button>
+                                        )}
+                                        {isAdmin && round32Exist && allRound32Played && !round16Exist && (
+                                            <button
+                                                onClick={() => handleAdvanceRound('round32', 'round16')}
+                                                disabled={generatingBracket}
+                                                className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-40"
+                                                style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
+                                            >
+                                                <Trophy size={16} />
+                                                {generatingBracket ? 'Gerando...' : 'Gerar Oitavas de Final'}
+                                            </button>
+                                        )}
+                                        {isAdmin && round16Exist && allRound16Played && !quartersExist && (
+                                            <button
+                                                onClick={() => handleAdvanceRound('round16', 'quarters')}
                                                 disabled={generatingBracket}
                                                 className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-40"
                                                 style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
@@ -518,9 +584,9 @@ export default function TournamentDashboard() {
                                                 {generatingBracket ? 'Gerando...' : 'Gerar Final'}
                                             </button>
                                         )}
-                                        {quartersExist && (
+                                        {anyKOExists && (
                                             <KnockoutBracket
-                                                matches={matches.filter(m => ['quarters', 'semis', 'final'].includes(m.stage))}
+                                                matches={matches.filter(m => ['round32', 'round16', 'quarters', 'semis', 'final'].includes(m.stage))}
                                                 players={players}
                                                 isAdmin={isAdmin}
                                                 onSelectMatch={(match) => setSelectedMatch(match)}
@@ -591,6 +657,109 @@ export default function TournamentDashboard() {
                         )}
                     </div>
                 )}
+
+                {/* Tab: Estatísticas */}
+                {tab === 'estatisticas' && (() => {
+                    const allPlayed = matches.filter(m => m.played && m.home_score !== null && m.away_score !== null)
+                    const entityIds = tournament.mode === '2v2' ? duos.map(d => d.id) : players.map(p => p.id)
+                    const stats = entityIds.map(eid => {
+                        const myM = allPlayed.filter(m => m.home_id === eid || m.away_id === eid)
+                        const wins = myM.filter(m =>
+                            (m.home_id === eid && m.home_score! > m.away_score!) ||
+                            (m.away_id === eid && m.away_score! > m.home_score!)
+                        ).length
+                        const draws = myM.filter(m => m.home_score === m.away_score).length
+                        const losses = myM.length - wins - draws
+                        const gf = myM.reduce((a, m) => a + (m.home_id === eid ? m.home_score! : m.away_score!), 0)
+                        const ga = myM.reduce((a, m) => a + (m.home_id === eid ? m.away_score! : m.home_score!), 0)
+                        return {
+                            id: eid, name: getEntityName(eid),
+                            played: myM.length, wins, draws, losses, gf, ga,
+                            gd: gf - ga,
+                            winRate: myM.length > 0 ? Math.round(wins / myM.length * 100) : 0,
+                        }
+                    })
+                    const totalGoals = allPlayed.reduce((a, m) => a + (m.home_score ?? 0) + (m.away_score ?? 0), 0)
+                    const gpj = allPlayed.length > 0 ? (totalGoals / allPlayed.length).toFixed(1) : '0.0'
+                    const topScorers = [...stats].sort((a, b) => b.gf - a.gf || b.gd - a.gd)
+                    const topWinRate = [...stats].filter(s => s.played >= 1).sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
+                    const bestDef = [...stats].filter(s => s.played >= 1).sort((a, b) => a.ga - b.ga || b.played - a.played)
+                    return (
+                        <div className="flex flex-col gap-4">
+                            {/* Resumo geral */}
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { label: 'Partidas jogadas', value: allPlayed.length },
+                                    { label: 'Total de gols', value: totalGoals },
+                                    { label: 'Gols por jogo', value: gpj },
+                                ].map(({ label, value }) => (
+                                    <div key={label} className="rounded-xl bg-white/5 border border-white/10 px-3 py-3 text-center">
+                                        <p className="font-bold text-lg text-white">{value}</p>
+                                        <p className="text-white/40 text-xs mt-0.5 leading-tight">{label}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Artilheiros */}
+                            {topScorers.length > 0 && (
+                                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-white/10" style={{ backgroundColor: 'rgba(201,153,42,0.08)' }}>
+                                        <h3 className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>Artilheiros</h3>
+                                    </div>
+                                    {topScorers.slice(0, 5).map((s, i) => (
+                                        <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0">
+                                            <span className="text-white/30 text-xs w-5 text-center font-bold">{i + 1}</span>
+                                            <span className="flex-1 text-white text-sm truncate">{s.name}</span>
+                                            <span className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>{s.gf} gols</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Aproveitamento */}
+                            {topWinRate.length > 0 && (
+                                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-white/10" style={{ backgroundColor: 'rgba(201,153,42,0.08)' }}>
+                                        <h3 className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>Aproveitamento</h3>
+                                    </div>
+                                    {topWinRate.slice(0, 5).map((s, i) => (
+                                        <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0">
+                                            <span className="text-white/30 text-xs w-5 text-center font-bold">{i + 1}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-white text-sm truncate">{s.name}</p>
+                                                <p className="text-white/40 text-xs">{s.wins}V {s.draws}E {s.losses}D</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="font-bold text-sm text-green-400">{s.winRate}%</span>
+                                                <p className="text-white/30 text-xs">{s.played} jogos</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Melhor defesa */}
+                            {bestDef.length > 0 && (
+                                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-white/10" style={{ backgroundColor: 'rgba(201,153,42,0.08)' }}>
+                                        <h3 className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>Melhor Defesa</h3>
+                                    </div>
+                                    {bestDef.slice(0, 5).map((s, i) => (
+                                        <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0">
+                                            <span className="text-white/30 text-xs w-5 text-center font-bold">{i + 1}</span>
+                                            <span className="flex-1 text-white text-sm truncate">{s.name}</span>
+                                            <span className="font-bold text-sm text-blue-400">{s.ga} sofridos</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {allPlayed.length === 0 && (
+                                <p className="text-white/30 text-sm text-center py-8">Nenhuma partida jogada ainda.</p>
+                            )}
+                        </div>
+                    )
+                })()}
 
                 {/* Tab: Jogadores */}
                 {tab === 'jogadores' && (
